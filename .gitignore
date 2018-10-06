@@ -1,0 +1,5 @@
+src/jupyter/.idea/
+src/jupyter/.ipynb_checkpoints/
+src/jupyter/__pycache__/
+src/jupyter/*.jpg
+src/jupyter/img/
