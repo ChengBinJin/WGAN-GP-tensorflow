@@ -3,3 +3,5 @@ src/jupyter/.ipynb_checkpoints/
 src/jupyter/__pycache__/
 src/jupyter/*.jpg
 src/jupyter/img/
+src/jupyter/*.gif
+src/jupyter/*.mp4
