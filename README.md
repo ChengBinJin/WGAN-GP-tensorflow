@@ -16,19 +16,21 @@ This repository is a Tensorflow implementation of [WGAN-GP](https://arxiv.org/ab
 Results from 2-dimensional of the 8 Gaussian Mixture Models, 25 Gaussian Mixture Models, and Swiss Roll data. [Ipython Notebook](https://github.com/ChengBinJin/WGAN-GP-tensorflow/tree/master/src/jupyter).  
 
 **Note:** To demonstrate following experiment, we held the generator distribution Pg fixed at the real distribution plus unit-variance Gaussian noise.
-- **Top:** WGAN critic with weight clipping  
+- **Top:** GAN discriminator  
+- **Middle:** WGAN critic with weight clipping  
 - **Bottom:** WGAN critic with weight penalty  
 <p align = 'center'>
   <a>
-    <img src = 'https://user-images.githubusercontent.com/37034031/46614152-12523600-cb50-11e8-8b42-361c400d9edf.gif' width=1000>
+    <img src = 'https://user-images.githubusercontent.com/37034031/46774996-29f01100-cd40-11e8-92c4-3caff671b926.gif' width=1000>
   </a>
 </p>
 
 **Note:** For the next experiment, we did not fix generator and showed generated points by the generator.
-- **Top:** WGAN critic with weight clipping  
+- **Top:** GAN discriminator     
+- **Middle:** WGAN critic with weight clipping  
 - **Bottom:** WGAN critic with weight penalty  
 <p align = 'center'>
   <a>
-    <img src = 'https://user-images.githubusercontent.com/37034031/46614836-c4d6c880-cb51-11e8-9359-69f824ce2a43.gif' width=1000>
+    <img src = 'https://user-images.githubusercontent.com/37034031/46775078-90752f00-cd40-11e8-9c9b-0e8a59f15687.gif' width=1000>
   </a>
 </p>
