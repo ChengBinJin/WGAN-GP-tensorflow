@@ -21,7 +21,7 @@ Results from 2-dimensional of the 8 Gaussian Mixture Models, 25 Gaussian Mixture
 - **Bottom:** WGAN critic with weight penalty  
 <p align = 'center'>
   <a>
-    <img src = 'https://user-images.githubusercontent.com/37034031/46774996-29f01100-cd40-11e8-92c4-3caff671b926.gif' width=1000>
+    <img src = 'https://user-images.githubusercontent.com/37034031/46775237-55bfc680-cd41-11e8-84ee-21d793f56631.gif' width=1000>
   </a>
 </p>
 
@@ -31,6 +31,6 @@ Results from 2-dimensional of the 8 Gaussian Mixture Models, 25 Gaussian Mixture
 - **Bottom:** WGAN critic with weight penalty  
 <p align = 'center'>
   <a>
-    <img src = 'https://user-images.githubusercontent.com/37034031/46775078-90752f00-cd40-11e8-9c9b-0e8a59f15687.gif' width=1000>
+    <img src = 'https://user-images.githubusercontent.com/37034031/46775252-6a9c5a00-cd41-11e8-8646-8778b9561519.gif' width=1000>
   </a>
 </p>
