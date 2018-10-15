@@ -5,4 +5,5 @@ src/jupyter/*.jpg
 src/jupyter/img/
 src/jupyter/*.gif
 src/jupyter/*.mp4
+src/.idea/
 github_imgs/
