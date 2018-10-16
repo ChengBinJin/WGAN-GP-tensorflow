@@ -11,14 +11,14 @@ from solver import Solver
 FLAGS = tf.flags.FLAGS
 
 tf.flags.DEFINE_string('gpu_index', '0', 'gpu index if you have multiple gpus, default: 0')
-tf.flags.DEFINE_integer('batch_size', 50, 'batch size, default: 200')
+tf.flags.DEFINE_integer('batch_size', 64, 'batch size, default: 64')
 tf.flags.DEFINE_string('dataset', 'mnist', 'dataset name from [mnist], default: mnist')
 
 tf.flags.DEFINE_bool('is_train', True, 'training or inference mode, default: True')
 tf.flags.DEFINE_float('learning_rate', 1e-4, 'initial learning rate for Adam, default: 0.0002')
 tf.flags.DEFINE_integer('num_critic', 5, 'the number of iterations of the critic per generator iteration, default: 5')
 tf.flags.DEFINE_integer('z_dim', 128, 'dimension of z vector, default: 128')
-tf.flags.DEFINE_float('lambda', 10., 'hyper-parameter of the gradient penalty, default: 10.')
+tf.flags.DEFINE_float('lambda_', 10., 'gradient penalty lambda hyperparameter, default: 10.')
 tf.flags.DEFINE_float('beta1', 0.5, 'beta1 momentum term of Adam, default: 0.5')
 tf.flags.DEFINE_float('beta2', 0.9, 'beta2 momentum term of Adam, default: 0.9')
 
