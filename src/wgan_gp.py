@@ -18,6 +18,7 @@ import tensorflow_utils as tf_utils
 import utils as utils
 
 
+# noinspection PyPep8Naming
 class WGAN_GP(object):
     def __init__(self, sess, flags, dataset):
         self.sess = sess
@@ -34,8 +35,8 @@ class WGAN_GP(object):
         print("Initialized WGAN SUCCESS!")
 
     def _build_net(self):
-        self.Y = tf.placeholder(tf.float32, shape=[None, *self.image_size], name='real_data')
-        self.z = tf.placeholder(tf.float32, shape=[None, self.flags.z_dim], name='latent_vector')
+        self.Y = tf.placeholder(tf.float32, shape=[self.flags.batch_size, *self.image_size], name='real_data')
+        self.z = tf.placeholder(tf.float32, shape=[self.flags.batch_size, self.flags.z_dim], name='latent_vector')
 
         self.g_samples = self.generator(self.z)
         _, d_logit_real = self.discriminator(self.Y)
@@ -60,7 +61,7 @@ class WGAN_GP(object):
             learning_rate=self.flags.learning_rate, beta1=0.5, beta2=0.9).minimize(self.d_loss, var_list=d_vars)
 
     def gradient_penalty(self):
-        alpha = tf.random_uniform(shape=[self.flags.batch_size, 1], minval=0., maxval=1.)
+        alpha = tf.random_uniform(shape=[self.flags.batch_size, 1, 1, 1], minval=0., maxval=1.)
         differences = self.g_samples - self.Y
         interpolates = self.Y + (alpha * differences)
         gradients = tf.gradients(self.discriminator(interpolates, is_reuse=True), [interpolates])[0]
@@ -70,9 +71,9 @@ class WGAN_GP(object):
         return gradient_penalty
 
     def _tensorboard(self):
-        tf.summary.scalar('loss/wgan_d_loss', self.wgan_d_loss)
+        tf.summary.scalar('loss/negative_wgan_d_loss', -self.wgan_d_loss)
         tf.summary.scalar('loss/gp_loss', self.gp_loss)
-        tf.summary.scalar('loss/d_loss', self.d_loss)
+        tf.summary.scalar('loss/negative_d_loss', -self.d_loss)  # negative critic loss
         tf.summary.scalar('loss/g_loss', self.g_loss)
 
         self.summary_op = tf.summary.merge_all()
@@ -97,7 +98,7 @@ class WGAN_GP(object):
             # from (N, 16, 16, 64) to (N, 32, 32, 1)
             output = tf_utils.deconv2d(h2_relu, self.image_size[2], k_h=5, k_w=5, name='h3_deconv2d')
 
-            return tf.nn.tanh(output)
+            return tf_utils.tanh(output)
 
     def discriminator(self, data, name='d_', is_reuse=False):
         with tf.variable_scope(name) as scope:
@@ -137,7 +138,11 @@ class WGAN_GP(object):
         gen_feed = {self.z: self.sample_z(num=self.flags.batch_size), self.Y: batch_imgs}
         _, g_loss, summary = self.sess.run([self.gen_optim, self.g_loss, self.summary_op], feed_dict=gen_feed)
 
+        # negative critic loss
         return [wgan_d_loss, gp_loss, d_loss, g_loss], summary
+
+    def test_step(self):
+        return self.sample_imgs()
 
     def sample_imgs(self):
         g_feed = {self.z: self.sample_z(num=self.flags.sample_batch)}

@@ -96,8 +96,8 @@ class Solver(object):
 
     def sample(self, iter_time):
         if np.mod(iter_time, self.flags.sample_freq) == 0:
-            imgs, names = self.model.sample_imgs()
-            self.model.plots(imgs, iter_time, self.sample_out_dir, names)
+            imgs = self.model.sample_imgs()
+            self.model.plots(imgs, iter_time, self.sample_out_dir)
 
     def save_model(self, iter_time):
         if np.mod(iter_time + 1, self.flags.save_freq) == 0:
