@@ -61,7 +61,7 @@ Results from 2-dimensional of the 8 Gaussian Mixture Models, 25 Gaussian Mixture
 <img src="https://user-images.githubusercontent.com/37034031/47340155-56107800-d6d8-11e8-8ec2-46ef2d8af096.png" width=900>
 </p>
 
-### Test WGAN
+### Test WGAN-GP
 
 ### Citation
 ```
