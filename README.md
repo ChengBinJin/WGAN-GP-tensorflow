@@ -75,8 +75,8 @@ Results from 2-dimensional of the 8 Gaussian Mixture Models, 25 Gaussian Mixture
 ```
 
 ### Attributions/Thanks
-- This project borrowed some code from [igul222](https://github.com/igul222/improved_wgan_training)
-- Some readme formatting was borrowed from [Logan Engstrom](https://github.com/lengstrom/fast-style-transfer)
+- This project borrowed some code from [igul222](https://github.com/igul222/improved_wgan_training).
+- Some readme formatting was borrowed from [Logan Engstrom](https://github.com/lengstrom/fast-style-transfer).
 
 ## License
 Copyright (c) 2018 Cheng-Bin Jin. Contact me for commercial use (or rather any use that is not academic research) (email: sbkim0407@gmail.com). Free for research use, as long as proper attribution is given and this copyright notice is retained.
