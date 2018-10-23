@@ -139,7 +139,7 @@ class WGAN_GP(object):
         _, g_loss, summary = self.sess.run([self.gen_optim, self.g_loss, self.summary_op], feed_dict=gen_feed)
 
         # negative critic loss
-        return [wgan_d_loss, gp_loss, d_loss, g_loss], summary
+        return [-wgan_d_loss, gp_loss, -d_loss, g_loss], summary
 
     def test_step(self):
         return self.sample_imgs()
