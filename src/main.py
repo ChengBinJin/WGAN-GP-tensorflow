@@ -12,7 +12,7 @@ FLAGS = tf.flags.FLAGS
 
 tf.flags.DEFINE_string('gpu_index', '0', 'gpu index if you have multiple gpus, default: 0')
 tf.flags.DEFINE_integer('batch_size', 64, 'batch size, default: 64')
-tf.flags.DEFINE_string('dataset', 'mnist', 'dataset name from [mnist], default: mnist')
+tf.flags.DEFINE_string('dataset', 'mnist', 'dataset name from [mnist, cifar10], default: mnist')
 
 tf.flags.DEFINE_bool('is_train', True, 'training or inference mode, default: True')
 tf.flags.DEFINE_float('learning_rate', 1e-4, 'initial learning rate for Adam, default: 0.0002')

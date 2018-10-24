@@ -57,9 +57,40 @@ class MnistDataset(object):
         return imgs_array / 127.5 - 1.  # from [0., 255.] to [-1., 1.]
 
 
+class Cifar10(object):
+    def __init__(self, flags, dataset_name):
+        self.flags = flags
+        self.dataset_name = dataset_name
+        self.image_size = (32, 32, 3)
+        self.num_trains = 0
+
+        self.cifar10_path = os.path.join('../../Data', self.dataset_name)
+        self._load_cifar10()
+
+    def _load_cifar10(self):
+        import cifar10
+
+        cifar10.data_path = self.cifar10_path
+        print('Load {} dataset...'.format(self.dataset_name))
+
+        # The CIFAR-10 data-set is about 163 MB and will be downloaded automatically if it is not
+        # located in the given path.
+        cifar10.maybe_download_and_extract()
+
+        self.train_data, _, _ = cifar10.load_training_data()
+        self.num_trains = self.train_data.shape[0]
+        print('Load {} dataset SUCCESS!'.format(self.dataset_name))
+
+    def train_next_batch(self, batch_size):
+        batch_imgs = self.train_data[np.random.choice(self.num_trains, batch_size, replace=False)]
+        return batch_imgs * 2. - 1.  # from [0., 1.] to [-1., 1.]
+
+
 # noinspection PyPep8Naming
 def Dataset(sess, flags, dataset_name):
     if dataset_name == 'mnist':
         return MnistDataset(sess, flags, dataset_name)
+    elif dataset_name == 'cifar10':
+        return Cifar10(flags, dataset_name)
     else:
         raise NotImplementedError

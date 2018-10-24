@@ -27,8 +27,16 @@ class WGAN_GP(object):
         self.image_size = dataset.image_size
 
         if self.flags.dataset == 'mnist':
-            self.gen_c = [4096, 128, 64]
+            self.gen_c = [4*4*256, 128, 64]
             self.dis_c = [64, 128, 256]
+        elif self.flags.dataset == 'cifar10':
+            self.gen_c = [4*4*4*128, 256, 128]
+            self.dis_c = [128, 256, 512]
+        else:
+            raise NotImplementedError
+
+        self.norm = 'batch'
+        self.gen_train_ops, self.dis_train_ops = [], []
 
         self._build_net()
         self._tensorboard()
@@ -84,15 +92,21 @@ class WGAN_GP(object):
 
             # from (N, 128) to (N, 4, 4, 256)
             h0_linear = tf_utils.linear(data_flatten, self.gen_c[0], name='h0_linear')
+            if self.flags.dataset == 'cifar10':
+                h0_linear = tf_utils.norm(h0_linear, _type=self.norm, _ops=self.gen_train_ops, name='h0_norm')
             h0_relu = tf.nn.relu(h0_linear, name='h0_relu')
             h0_reshape = tf.reshape(h0_relu, [tf.shape(h0_relu)[0], 4, 4, int(self.gen_c[0]/(4*4))])
 
             # from (N, 4, 4, 256) to (N, 8, 8, 128)
             h1_deconv = tf_utils.deconv2d(h0_reshape, self.gen_c[1], k_h=5, k_w=5, name='h1_deconv2d')
+            if self.flags.dataset == 'cifar10':
+                h1_deconv = tf_utils.norm(h1_deconv, _type=self.norm, _ops=self.gen_train_ops, name='h1_norm')
             h1_relu = tf.nn.relu(h1_deconv, name='h1_relu')
 
             # from (N, 8, 8, 128) to (N, 16, 16, 64)
             h2_deconv = tf_utils.deconv2d(h1_relu, self.gen_c[2], k_h=5, k_w=5, name='h2_deconv2d')
+            if self.flags.dataset == 'cifar10':
+                h2_deconv = tf_utils.norm(h2_deconv, _type=self.norm, _ops=self.gen_train_ops, name='h2_norm')
             h2_relu = tf.nn.relu(h2_deconv, name='h2_relu')
 
             # from (N, 16, 16, 64) to (N, 32, 32, 1)
@@ -144,8 +158,8 @@ class WGAN_GP(object):
     def test_step(self):
         return self.sample_imgs()
 
-    def sample_imgs(self):
-        g_feed = {self.z: self.sample_z(num=self.flags.sample_batch)}
+    def sample_imgs(self, sample_size=64):
+        g_feed = {self.z: self.sample_z(num=sample_size)}
         y_fakes = self.sess.run(self.g_samples, feed_dict=g_feed)
 
         return [y_fakes]

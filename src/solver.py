@@ -75,6 +75,9 @@ class Solver(object):
             self.train_writer.add_summary(summary, self.iter_time)
             self.train_writer.flush()
 
+            # calculate inception score
+            inception_score = self.get_inception_score()
+
             # save model
             self.save_model(self.iter_time)
             self.iter_time += 1
@@ -93,6 +96,19 @@ class Solver(object):
 
             imgs = self.model.test_step()
             self.model.plots(imgs, iter_time, self.test_out_dir)
+
+    def get_inception_score(self):
+        all_samples = []
+        for _ in range(10):
+            imgs = self.model.sample_imgs(sample_size=100)
+            all_samples.append(imgs[0])
+
+        all_samples = np.concatenate(all_samples, axis=0)
+        all_samples = ((all_samples + 1.) * 255. / 2.).astype(np.uint8)
+
+        # TODO: give to the inception function!
+
+        return 0.
 
     def sample(self, iter_time):
         if np.mod(iter_time, self.flags.sample_freq) == 0:
