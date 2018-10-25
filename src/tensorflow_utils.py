@@ -4,9 +4,28 @@
 # Written by Cheng-Bin Jin
 # Email: sbkim0407@gmail.com
 # ---------------------------------------------------------
+import os
+import logging
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 from tensorflow.python.training import moving_averages
+
+logger = logging.getLogger(__name__)  # logger
+logger.setLevel(logging.INFO)
+
+
+def _init_logger(log_path):
+    formatter = logging.Formatter('%(asctime)s:%(name)s:%(message)s')
+    # file handler
+    file_handler = logging.FileHandler(os.path.join(log_path, 'model.log'))
+    file_handler.setFormatter(formatter)
+    file_handler.setLevel(logging.INFO)
+    # stream handler
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(formatter)
+    # add handlers
+    logger.addHandler(file_handler)
+    logger.addHandler(stream_handler)
 
 
 def padding2d(x, p_h=1, p_w=1, pad_type='REFLECT', name='pad2d'):
@@ -235,7 +254,8 @@ def xavier_init(in_dim):
 
 
 def print_activations(t):
-    print(t.op.name, ' ', t.get_shape().as_list())
+    # print(t.op.name, ' ', t.get_shape().as_list())
+    logger.info(t.op.name + '{}'.format(t.get_shape().as_list()))
 
 
 def show_all_variables():

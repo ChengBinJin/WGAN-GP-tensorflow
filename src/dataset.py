@@ -1,96 +1,330 @@
-# ---------------------------------------------------------
-# Tensorflow WGAN-GP Implementation
-# Licensed under The MIT License [see LICENSE for details]
-# Written by Cheng-Bin Jin
-# Email: sbkim0407@gmail.com
-# ---------------------------------------------------------
-import os
+########################################################################
+#
+# Class for creating a data-set consisting of all files in a directory.
+#
+# Example usage is shown in the file knifey.py and Tutorial #09.
+#
+# Implemented in Python 3.5
+#
+########################################################################
+#
+# This file is part of the TensorFlow Tutorials available at:
+#
+# https://github.com/Hvass-Labs/TensorFlow-Tutorials
+#
+# Published under the MIT License. See the file LICENSE for details.
+#
+# Copyright 2016 by Magnus Erik Hvass Pedersen
+#
+########################################################################
+
 import numpy as np
-import scipy.misc
-import tensorflow as tf
+import os
+import shutil
+from cache import cache
 
 
-class MnistDataset(object):
-    def __init__(self, sess, flags, dataset_name):
-        self.sess = sess
-        self.flags = flags
-        self.dataset_name = dataset_name
-        self.image_size = (32, 32, 1)
-        self.img_buffle = 100000  # image buffer for image shuflling
-        self.num_trains, self.num_tests = 0, 0
+########################################################################
 
-        self.mnist_path = os.path.join('../../Data', self.dataset_name)
-        self._load_mnist()
 
-    def _load_mnist(self):
-        print('Load {} dataset...'.format(self.dataset_name))
-        self.train_data, self.test_data = tf.keras.datasets.mnist.load_data()
-        # self.train_data is tuple: (image, label)
-        self.num_trains = self.train_data[0].shape[0]
-        self.num_tests = self.test_data[0].shape[0]
+def one_hot_encoded(class_numbers, num_classes=None):
+    """
+    Generate the One-Hot encoded class-labels from an array of integers.
+    For example, if class_number=2 and num_classes=4 then
+    the one-hot encoded label is the float array: [0. 0. 1. 0.]
+    :param class_numbers:
+        Array of integers with class-numbers.
+        Assume the integers are from zero to num_classes-1 inclusive.
+    :param num_classes:
+        Number of classes. If None then use max(class_numbers)+1.
+    :return:
+        2-dim array of shape: [len(class_numbers), num_classes]
+    """
 
-        # TensorFlow Dataset API
-        train_x, train_y = self.train_data
-        dataset = tf.data.Dataset.from_tensor_slices(({'image': train_x}, train_y))
-        dataset = dataset.shuffle(self.img_buffle).repeat().batch(self.flags.batch_size)
+    # Find the number of classes if None is provided.
+    # Assumes the lowest class-number is zero.
+    if num_classes is None:
+        num_classes = np.max(class_numbers) + 1
 
-        iterator = dataset.make_one_shot_iterator()
-        self.next_batch = iterator.get_next()
+    return np.eye(num_classes, dtype=float)[class_numbers]
 
-        print('Load {} dataset SUCCESS!'.format(self.dataset_name))
 
-    def train_next_batch(self, batch_size):
-        batch_data = self.sess.run(self.next_batch)
-        batch_imgs = batch_data[0]["image"]
-        # batch_labels = batch_data[1]
+########################################################################
 
-        if self.flags.batch_size > batch_size:
-            # reshape 784 vector to 28 x 28 x 1
-            batch_imgs = np.reshape(batch_imgs[:batch_size], [batch_size, 28, 28])
+
+class DataSet:
+    def __init__(self, in_dir, exts='.jpg'):
+        """
+        Create a data-set consisting of the filenames in the given directory
+        and sub-dirs that match the given filename-extensions.
+        For example, the knifey-spoony data-set (see knifey.py) has the
+        following dir-structure:
+        knifey-spoony/forky/
+        knifey-spoony/knifey/
+        knifey-spoony/spoony/
+        knifey-spoony/forky/test/
+        knifey-spoony/knifey/test/
+        knifey-spoony/spoony/test/
+        This means there are 3 classes called: forky, knifey, and spoony.
+        If we set in_dir = "knifey-spoony/" and create a new DataSet-object
+        then it will scan through these directories and create a training-set
+        and test-set for each of these classes.
+        The training-set will contain a list of all the *.jpg filenames
+        in the following directories:
+        knifey-spoony/forky/
+        knifey-spoony/knifey/
+        knifey-spoony/spoony/
+        The test-set will contain a list of all the *.jpg filenames
+        in the following directories:
+        knifey-spoony/forky/test/
+        knifey-spoony/knifey/test/
+        knifey-spoony/spoony/test/
+        See the TensorFlow Tutorial #09 for a usage example.
+        :param in_dir:
+            Root-dir for the files in the data-set.
+            This would be 'knifey-spoony/' in the example above.
+        :param exts:
+            String or tuple of strings with valid filename-extensions.
+            Not case-sensitive.
+        :return:
+            Object instance.
+        """
+
+        # Extend the input directory to the full path.
+        in_dir = os.path.abspath(in_dir)
+
+        # Input directory.
+        self.in_dir = in_dir
+
+        # Convert all file-extensions to lower-case.
+        self.exts = tuple(ext.lower() for ext in exts)
+
+        # Names for the classes.
+        self.class_names = []
+
+        # Filenames for all the files in the training-set.
+        self.filenames = []
+
+        # Filenames for all the files in the test-set.
+        self.filenames_test = []
+
+        # Class-number for each file in the training-set.
+        self.class_numbers = []
+
+        # Class-number for each file in the test-set.
+        self.class_numbers_test = []
+
+        # Total number of classes in the data-set.
+        self.num_classes = 0
+
+        # For all files/dirs in the input directory.
+        for name in os.listdir(in_dir):
+            # Full path for the file / dir.
+            current_dir = os.path.join(in_dir, name)
+
+            # If it is a directory.
+            if os.path.isdir(current_dir):
+                # Add the dir-name to the list of class-names.
+                self.class_names.append(name)
+
+                # Training-set.
+
+                # Get all the valid filenames in the dir (not sub-dirs).
+                filenames = self._get_filenames(current_dir)
+
+                # Append them to the list of all filenames for the training-set.
+                self.filenames.extend(filenames)
+
+                # The class-number for this class.
+                class_number = self.num_classes
+
+                # Create an array of class-numbers.
+                class_numbers = [class_number] * len(filenames)
+
+                # Append them to the list of all class-numbers for the training-set.
+                self.class_numbers.extend(class_numbers)
+
+                # Test-set.
+
+                # Get all the valid filenames in the sub-dir named 'test'.
+                filenames_test = self._get_filenames(os.path.join(current_dir, 'test'))
+
+                # Append them to the list of all filenames for the test-set.
+                self.filenames_test.extend(filenames_test)
+
+                # Create an array of class-numbers.
+                class_numbers = [class_number] * len(filenames_test)
+
+                # Append them to the list of all class-numbers for the test-set.
+                self.class_numbers_test.extend(class_numbers)
+
+                # Increase the total number of classes in the data-set.
+                self.num_classes += 1
+
+    def _get_filenames(self, dir_):
+        """
+        Create and return a list of filenames with matching extensions in the given directory.
+        :param dir_:
+            Directory to scan for files. Sub-dirs are not scanned.
+        :return:
+            List of filenames. Only filenames. Does not include the directory.
+        """
+
+        # Initialize empty list.
+        filenames = []
+
+        # If the directory exists.
+        if os.path.exists(dir_):
+            # Get all the filenames with matching extensions.
+            for filename in os.listdir(dir_):
+                if filename.lower().endswith(self.exts):
+                    filenames.append(filename)
+
+        return filenames
+
+    def get_paths(self, test=False):
+        """
+        Get the full paths for the files in the data-set.
+        :param test:
+            Boolean. Return the paths for the test-set (True) or training-set (False).
+        :return:
+            Iterator with strings for the path-names.
+        """
+
+        if test:
+            # Use the filenames and class-numbers for the test-set.
+            filenames = self.filenames_test
+            class_numbers = self.class_numbers_test
+
+            # Sub-dir for test-set.
+            test_dir = "test/"
         else:
-            batch_imgs = np.reshape(batch_imgs, [self.flags.batch_size, 28, 28])
+            # Use the filenames and class-numbers for the training-set.
+            filenames = self.filenames
+            class_numbers = self.class_numbers
 
-        imgs_32 = [scipy.misc.imresize(batch_imgs[idx], self.image_size[0:2])
-                   for idx in range(batch_imgs.shape[0])]  # scipy.misc.imresize convert to uint8 type
-        imgs_array = np.expand_dims(np.asarray(imgs_32).astype(np.float32), axis=3)
+            # Don't use a sub-dir for test-set.
+            test_dir = ""
 
-        return imgs_array / 127.5 - 1.  # from [0., 255.] to [-1., 1.]
+        for filename, cls in zip(filenames, class_numbers):
+            # Full path-name for the file.
+            path = os.path.join(self.in_dir, self.class_names[cls], test_dir, filename)
+
+            yield path
+
+    def get_training_set(self):
+        """
+        Return the list of paths for the files in the training-set,
+        and the list of class-numbers as integers,
+        and the class-numbers as one-hot encoded arrays.
+        """
+
+        return list(self.get_paths()), np.asarray(self.class_numbers), one_hot_encoded(
+            class_numbers=self.class_numbers, num_classes=self.num_classes)
+
+    def get_test_set(self):
+        """
+        Return the list of paths for the files in the test-set,
+        and the list of class-numbers as integers,
+        and the class-numbers as one-hot encoded arrays.
+        """
+
+        return list(self.get_paths(test=True)), np.asarray(self.class_numbers_test), one_hot_encoded(
+            class_numbers=self.class_numbers_test, num_classes=self.num_classes)
+
+    def copy_files(self, train_dir, test_dir):
+        """
+        Copy all the files in the training-set to train_dir
+        and copy all the files in the test-set to test_dir.
+        For example, the normal directory structure for the
+        different classes in the training-set is:
+        knifey-spoony/forky/
+        knifey-spoony/knifey/
+        knifey-spoony/spoony/
+        Normally the test-set is a sub-dir of the training-set:
+        knifey-spoony/forky/test/
+        knifey-spoony/knifey/test/
+        knifey-spoony/spoony/test/
+        But some APIs use another dir-structure for the training-set:
+
+        knifey-spoony/train/forky/
+        knifey-spoony/train/knifey/
+        knifey-spoony/train/spoony/
+        and for the test-set:
+
+        knifey-spoony/test/forky/
+        knifey-spoony/test/knifey/
+        knifey-spoony/test/spoony/
+        :param train_dir: Directory for the training-set e.g. 'knifey-spoony/train/'
+        :param test_dir: Directory for the test-set e.g. 'knifey-spoony/test/'
+        :return: Nothing.
+        """
+
+        # Helper-function for actually copying the files.
+        def _copy_files(src_paths, dst_dir, class_numbers):
+
+            # Create a list of dirs for each class, e.g.:
+            # ['knifey-spoony/test/forky/',
+            #  'knifey-spoony/test/knifey/',
+            #  'knifey-spoony/test/spoony/']
+            class_dirs = [os.path.join(dst_dir, class_name + "/")
+                          for class_name in self.class_names]
+
+            # Check if each class-directory exists, otherwise create it.
+            for dir_ in class_dirs:
+                if not os.path.exists(dir_):
+                    os.makedirs(dir_)
+
+            # For all the file-paths and associated class-numbers,
+            # copy the file to the destination dir for that class.
+            for src, cls in zip(src_paths, class_numbers):
+                shutil.copy(src=src, dst=class_dirs[cls])
+
+        # Copy the files for the training-set.
+        _copy_files(src_paths=self.get_paths(test=False),
+                    dst_dir=train_dir,
+                    class_numbers=self.class_numbers)
+
+        print("- Copied training-set to:", train_dir)
+
+        # Copy the files for the test-set.
+        _copy_files(src_paths=self.get_paths(test=True),
+                    dst_dir=test_dir,
+                    class_numbers=self.class_numbers_test)
+
+        print("- Copied test-set to:", test_dir)
 
 
-class Cifar10(object):
-    def __init__(self, flags, dataset_name):
-        self.flags = flags
-        self.dataset_name = dataset_name
-        self.image_size = (32, 32, 3)
-        self.num_trains = 0
-
-        self.cifar10_path = os.path.join('../../Data', self.dataset_name)
-        self._load_cifar10()
-
-    def _load_cifar10(self):
-        import cifar10
-
-        cifar10.data_path = self.cifar10_path
-        print('Load {} dataset...'.format(self.dataset_name))
-
-        # The CIFAR-10 data-set is about 163 MB and will be downloaded automatically if it is not
-        # located in the given path.
-        cifar10.maybe_download_and_extract()
-
-        self.train_data, _, _ = cifar10.load_training_data()
-        self.num_trains = self.train_data.shape[0]
-        print('Load {} dataset SUCCESS!'.format(self.dataset_name))
-
-    def train_next_batch(self, batch_size):
-        batch_imgs = self.train_data[np.random.choice(self.num_trains, batch_size, replace=False)]
-        return batch_imgs * 2. - 1.  # from [0., 1.] to [-1., 1.]
+########################################################################
 
 
-# noinspection PyPep8Naming
-def Dataset(sess, flags, dataset_name):
-    if dataset_name == 'mnist':
-        return MnistDataset(sess, flags, dataset_name)
-    elif dataset_name == 'cifar10':
-        return Cifar10(flags, dataset_name)
-    else:
-        raise NotImplementedError
+def load_cached(cache_path, in_dir):
+    """
+    Wrapper-function for creating a DataSet-object, which will be
+    loaded from a cache-file if it already exists, otherwise a new
+    object will be created and saved to the cache-file.
+    This is useful if you need to ensure the ordering of the
+    filenames is consistent every time you load the data-set,
+    for example if you use the DataSet-object in combination
+    with Transfer Values saved to another cache-file, see e.g.
+    Tutorial #09 for an example of this.
+    :param cache_path:
+        File-path for the cache-file.
+    :param in_dir:
+        Root-dir for the files in the data-set.
+        This is an argument for the DataSet-init function.
+    :return:
+        The DataSet-object.
+    """
+
+    print("Creating dataset from the files in: " + in_dir)
+
+    # If the object-instance for DataSet(in_dir=data_dir) already
+    # exists in the cache-file then reload it, otherwise create
+    # an object instance and save it to the cache-file for next time.
+    dataset = cache(cache_path=cache_path,
+                    fn=DataSet, in_dir=in_dir)
+
+    return dataset
+
+########################################################################

@@ -7,5 +7,7 @@ src/jupyter/*.gif
 src/jupyter/*.mp4
 src/.idea/
 src/mnist/
+src/imagenet/
+src/cifar10/
 src/__pycache__/
 github_imgs/

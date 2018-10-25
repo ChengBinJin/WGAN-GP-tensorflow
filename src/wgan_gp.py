@@ -4,6 +4,7 @@
 # Written by Cheng-Bin Jin
 # Email: sbkim0407@gmail.com
 # ---------------------------------------------------------
+import logging
 import collections
 import numpy as np
 import tensorflow as tf
@@ -17,14 +18,18 @@ import matplotlib.gridspec as gridspec
 import tensorflow_utils as tf_utils
 import utils as utils
 
+logger = logging.getLogger(__name__)  # logger
+logger.setLevel(logging.INFO)
+
 
 # noinspection PyPep8Naming
 class WGAN_GP(object):
-    def __init__(self, sess, flags, dataset):
+    def __init__(self, sess, flags, dataset, log_path=None):
         self.sess = sess
         self.flags = flags
         self.dataset = dataset
         self.image_size = dataset.image_size
+        self.log_path = log_path
 
         if self.flags.dataset == 'mnist':
             self.gen_c = [4*4*256, 128, 64]
@@ -38,13 +43,18 @@ class WGAN_GP(object):
         self.norm = 'batch'
         self.gen_train_ops, self.dis_train_ops = [], []
 
-        self._build_net()
-        self._tensorboard()
-        print("Initialized WGAN SUCCESS!")
+        self._init_logger()     # init logger
+        self._build_net()       # init graph
+        self._tensorboard()     # init tensorboard
+        logger.info("Initialized WGAN-GP SUCCESS!")
+
+    def _init_logger(self):
+        if self.flags.is_train:
+            tf_utils._init_logger(self.log_path)
 
     def _build_net(self):
-        self.Y = tf.placeholder(tf.float32, shape=[self.flags.batch_size, *self.image_size], name='real_data')
-        self.z = tf.placeholder(tf.float32, shape=[self.flags.batch_size, self.flags.z_dim], name='latent_vector')
+        self.Y = tf.placeholder(tf.float32, shape=[None, *self.image_size], name='real_data')
+        self.z = tf.placeholder(tf.float32, shape=[None, self.flags.z_dim], name='latent_vector')
 
         self.g_samples = self.generator(self.z)
         _, d_logit_real = self.discriminator(self.Y)
@@ -89,10 +99,12 @@ class WGAN_GP(object):
     def generator(self, data, name='g_'):
         with tf.variable_scope(name):
             data_flatten = flatten(data)
+            tf_utils.print_activations(data_flatten)
 
             # from (N, 128) to (N, 4, 4, 256)
             h0_linear = tf_utils.linear(data_flatten, self.gen_c[0], name='h0_linear')
             if self.flags.dataset == 'cifar10':
+                h0_linear = tf.reshape(h0_linear, [tf.shape(h0_linear)[0], 4, 4, int(self.gen_c[0] / (4 * 4))])
                 h0_linear = tf_utils.norm(h0_linear, _type=self.norm, _ops=self.gen_train_ops, name='h0_norm')
             h0_relu = tf.nn.relu(h0_linear, name='h0_relu')
             h0_reshape = tf.reshape(h0_relu, [tf.shape(h0_relu)[0], 4, 4, int(self.gen_c[0]/(4*4))])
@@ -118,6 +130,7 @@ class WGAN_GP(object):
         with tf.variable_scope(name) as scope:
             if is_reuse is True:
                 scope.reuse_variables()
+            tf_utils.print_activations(data)
 
             # from (N, 32, 32, 1) to (N, 16, 16, 64)
             h0_conv = tf_utils.conv2d(data, self.dis_c[0], k_h=5, k_w=5, name='h0_conv2d')
