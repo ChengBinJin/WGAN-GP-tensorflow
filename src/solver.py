@@ -62,6 +62,7 @@ class Solver(object):
         elif not self.flags.is_train:  # test stage
             self.model_out_dir = "{}/model/{}".format(self.flags.dataset, self.flags.load_model)
             self.test_out_dir = "{}/test/{}".format(self.flags.dataset, self.flags.load_model)
+            self.log_out_dir = "{}/logs/{}".format(self.flags.dataset, self.flags.load_model)
 
             if not os.path.isdir(self.test_out_dir):
                 os.makedirs(self.test_out_dir)
@@ -153,7 +154,7 @@ class Solver(object):
             all_samples = ((all_samples + 1.) * 255. / 2.).astype(np.uint8)
 
             mean_IS, std_IS = get_inception_score(list(all_samples))
-            print('Inception score iter: {}, IS: {}'.format(self.iter_time, mean_IS))
+            # print('Inception score iter: {}, IS: {}'.format(self.iter_time, mean_IS))
 
             plot.plot('inception score', mean_IS)
             plot.flush(self.log_out_dir)  # write logs

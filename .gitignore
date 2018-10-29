@@ -8,6 +8,7 @@ src/jupyter/*.mp4
 src/.idea/
 src/mnist/
 src/imagenet/
+src/imagenet64/
 src/cifar10/
 src/__pycache__/
 github_imgs/

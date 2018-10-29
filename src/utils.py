@@ -148,28 +148,14 @@ def load_image(image_path, which_direction=0, is_gray_scale=True, img_size=(256,
     return img_a, img_b
 
 
-def load_data(image_path, flip=True, is_test=False, which_direction=0, is_gray_scale=True, transform_type='zero_center',
-              img_size=(256, 256, 1)):
-    img_a, img_b = load_image(image_path=image_path, which_direction=which_direction,
-                              is_gray_scale=is_gray_scale, img_size=img_size)
+def load_data(image_path, is_gray_scale=False):
+    img = imread(path=image_path, is_gray_scale=is_gray_scale)
+    img_trans = transform(img)  # from [0, 255] to [-1., 1.]
 
-    img_a, img_b = preprocess_pair(img_a, img_b, flip=flip, is_test=is_test)
+    if is_gray_scale and (img_trans.ndim == 2):
+        img_trans = np.expand_dims(img_trans, axis=2)
 
-    if transform_type == 'zero_center':
-        img_a = transform(img_a)
-        img_b = transform(img_b)
-    elif transform_type == 'positive':
-        img_a = img_a / 255.
-        img_b = img_b / 255.
-    else:
-        raise NotImplementedError
-
-    # hope output should be [h, w, c]
-    if (img_a.ndim == 2) and (img_b.ndim == 2):
-        img_a = np.expand_dims(img_a, axis=2)
-        img_b = np.expand_dims(img_b, axis=2)
-
-    return img_a, img_b
+    return img_trans
 
 
 def plots(imgs, iter_time, save_file, grid_cols, grid_rows, sample_batch, name=None):

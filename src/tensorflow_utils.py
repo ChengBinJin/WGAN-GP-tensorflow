@@ -6,6 +6,7 @@
 # ---------------------------------------------------------
 import os
 import logging
+import functools
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 from tensorflow.python.training import moving_averages
@@ -104,6 +105,8 @@ def norm(x, name, _type, _ops, is_train=True):
         return batch_norm(x, name=name, _ops=_ops, is_train=is_train)
     elif _type == 'instance':
         return instance_norm(x, name=name)
+    elif _type == 'layer':
+        return layer_norm(x, name=name)
     else:
         raise NotImplementedError
 
@@ -160,6 +163,27 @@ def instance_norm(x, name='instance_norm', mean=1.0, stddev=0.02, epsilon=1e-5):
         return scale * normalized + offset
 
 
+# TODO: I'm not sure is it a good implementation of layer normalization...
+def layer_norm(x, name='layer_norm'):
+    with tf.variable_scope(name):
+        norm_axes = [1, 2, 3]
+        mean, var = tf.nn.moments(x, axes=norm_axes, keep_dims=True)
+
+        # Assume the 'neurons' axis is the third of norm_axes. This is the case for fully-connected
+        # and BHWC conv layers.
+        n_neurons = x.get_shape().as_list()[norm_axes[2]]
+        offset = tf.get_variable('offset', n_neurons, tf.float32, initializer=tf.constant_initializer(0.0, tf.float32))
+        scale = tf.get_variable('scale', n_neurons, tf.float32, initializer=tf.constant_initializer(1.0, tf.float32))
+
+        # Add broadcasting dims to offset and scale (e.g. BCHW conv data)
+        offset = tf.reshape(offset, [1 for _ in range(len(norm_axes)-1)] + [-1])
+        scale = tf.reshape(scale, [1 for _ in range(len(norm_axes)-1)] + [-1])
+
+        result = tf.nn.batch_normalization(x, mean, var, offset, scale, 1e-5)
+
+        return result
+
+
 def n_res_blocks(x, _ops=None, norm_='instance', is_train=True, num_blocks=6, is_print=False):
     output = None
     for idx in range(1, num_blocks+1):
@@ -210,9 +234,34 @@ def identity(x, name='identity', is_print=False):
     return output
 
 
+def avgPoolConv(x, output_dim, filter_size=3, stride=1, name='avgPoolConv', is_print=True):
+    with tf.variable_scope(name):
+        output = avg_pool_2x2(x)
+        output = conv2d(output, output_dim=output_dim, k_h=filter_size, k_w=filter_size, d_h=stride, d_w=stride)
+        if is_print:
+            print_activations(output)
+
+        return output
+
+
+def convAvgPool(x, output_dim, filter_size=3, stride=1, name='convAvgPool', is_print=True):
+    with tf.variable_scope(name):
+        output = conv2d(x, output_dim=output_dim, k_h=filter_size, k_w=filter_size, d_h=stride, d_w=stride)
+        output = avg_pool_2x2(output)
+        if is_print:
+            print_activations(output)
+
+        return output
+
+
 def max_pool_2x2(x, name='max_pool'):
     with tf.name_scope(name):
         return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+
+
+def avg_pool_2x2(x, name='avg_pool'):
+    with tf.name_scope(name):
+        return tf.nn.avg_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
 
 def sigmoid(x, name='sigmoid', is_print=False):
@@ -271,3 +320,36 @@ def batch_convert2int(images):
 def convert2int(image):
     # transform from float tensor ([-1.,1.]) to int image ([0,255])
     return tf.image.convert_image_dtype((image + 1.0) / 2.0, tf.uint8)
+
+
+def res_block_v2(x, k, filter_size, _ops=None, norm_='instance', is_train=True, resample=None, name=None):
+    with tf.variable_scope(name):
+        if resample == 'down':
+            conv_shortcut = functools.partial(avgPoolConv, output_dim=k, filter_size=1)
+            conv_1 = functools.partial(conv2d, output_dim=k, k_h=filter_size, k_w=filter_size, d_h=1, d_w=1)
+            conv_2 = functools.partial(convAvgPool, output_dim=k)
+        elif resample == 'up':
+            conv_shortcut = functools.partial(deconv2d, k=k)
+            conv_1 = functools.partial(deconv2d, k=k, k_h=filter_size, k_w=filter_size)
+            conv_2 = functools.partial(conv2d, output_dim=k, k_h=filter_size, k_w=filter_size, d_h=1, d_w=1)
+        elif resample is None:
+            conv_shortcut = functools.partial(conv2d, output_dim=k, k_h=filter_size, k_w=filter_size, d_h=1, d_w=1)
+            conv_1 = functools.partial(conv2d, output_dim=k, k_h=filter_size, k_w=filter_size, d_h=1, d_w=1)
+            conv_2 = functools.partial(conv2d, output_dim=k, k_h=filter_size, k_w=filter_size, d_h=1, d_w=1)
+        else:
+            raise Exception('invalid resample value')
+
+        if (k == x.get_shape().as_list()[3]) and (resample is None):
+            shortcut = x  # Identity skip-connection
+        else:
+            shortcut = conv_shortcut(x, name='shortcut')
+
+        output = x
+        output = norm(output, _type=norm_, _ops=_ops, is_train=is_train, name='norm1')
+        output = relu(output, name='relu1')
+        output = conv_1(output, name='conv1')
+        output = norm(output, _type=norm_, _ops=_ops, is_train=is_train, name='norm2')
+        output = relu(output, name='relu2')
+        output = conv_2(output, name='conv2')
+
+        return shortcut + output

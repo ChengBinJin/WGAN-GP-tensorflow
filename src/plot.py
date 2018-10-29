@@ -1,6 +1,12 @@
+# ---------------------------------------------------------
+# Python Plot Function
+# Licensed under The MIT License [see LICENSE for details]
+# From https://github.com/igul222/improved_wgan_training/blob/master/tflib/plot.py
+# Code from igul222
+# ---------------------------------------------------------
 import os
-import matplotlib
-matplotlib.use('Agg')
+import matplotlib as mpl
+mpl.use('TkAgg')  # or whatever other backend that you want to solve Segmentation fault (core dumped)
 import matplotlib.pyplot as plt
 import collections
 

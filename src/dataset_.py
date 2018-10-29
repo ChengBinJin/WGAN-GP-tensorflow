@@ -10,6 +10,8 @@ import numpy as np
 import scipy.misc
 import tensorflow as tf
 
+import utils as utils
+
 logger = logging.getLogger(__name__)  # logger
 logger.setLevel(logging.INFO)
 
@@ -110,13 +112,41 @@ class Cifar10(object):
         return batch_imgs * 2. - 1.  # from [0., 1.] to [-1., 1.]
 
 
+class ImageNet64(object):
+    def __init__(self, flags, dataset_name):
+        self.flags = flags
+        self.dataset_name = dataset_name
+        self.image_size = (64, 64, 3)
+        self.num_trains = 0
+
+        self.imagenet64_path = os.path.join('../../Data', self.dataset_name, 'train_64x64')
+        self._load_imagenet64()
+
+    def _load_imagenet64(self):
+        logger.info('Load {} dataset...'.format(self.dataset_name))
+        self.train_data = utils.all_files_under(self.imagenet64_path, extension='.png')
+        self.num_trains = len(self.train_data)
+
+        logger.info('Load {} dataset SUCCESS!'.format(self.dataset_name))
+        logger.info('Img size: {}'.format(self.image_size))
+        logger.info('Num. of training data: {}'.format(self.num_trains))
+
+    def train_next_batch(self, batch_size):
+        batch_paths = np.random.choice(self.train_data, batch_size, replace=False)
+        batch_imgs = [utils.load_data(batch_path, is_gray_scale=False) for batch_path in batch_paths]
+        return np.asarray(batch_imgs)
+
+
 # noinspection PyPep8Naming
 def Dataset(sess, flags, dataset_name, log_path=None):
-    _init_logger(flags, log_path)  # init logger
+    if flags.is_train:
+        _init_logger(flags, log_path)  # init logger
 
     if dataset_name == 'mnist':
         return MnistDataset(sess, flags, dataset_name)
     elif dataset_name == 'cifar10':
         return Cifar10(flags, dataset_name)
+    elif dataset_name == 'imagenet64':
+        return ImageNet64(flags, dataset_name)
     else:
         raise NotImplementedError
