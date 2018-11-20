@@ -180,6 +180,3 @@ Copyright (c) 2018 Cheng-Bin Jin. Contact me for commercial use (or rather any u
 - [Vanilla GAN](https://github.com/ChengBinJin/VanillaGAN-TensorFlow)
 - [DCGAN](https://github.com/ChengBinJin/DCGAN-TensorFlow)
 - [WGAN](https://github.com/ChengBinJin/WGAN-TensorFlow)
-- [pix2pix](https://github.com/ChengBinJin/pix2pix-tensorflow)
-- [DiscoGAN](https://github.com/ChengBinJin/DiscoGAN-TensorFlow)
-- [VAE](https://github.com/ChengBinJin/VAE-Tensorflow)
