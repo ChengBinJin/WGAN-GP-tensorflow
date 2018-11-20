@@ -9,7 +9,6 @@ This repository is a Tensorflow implementation of [WGAN-GP](https://arxiv.org/ab
 
 ## Requirements
 
-## Applied GAN Structure
 
 ## Generated Images
 ### 1. Toy Dataset
@@ -45,6 +44,15 @@ Results from 2-dimensional of the 8 Gaussian Mixture Models, 25 Gaussian Mixture
 </p>
 
 ### 3. CIFAR-10
+<p align='center'>
+   <img src="https://user-images.githubusercontent.com/37034031/47658992-537db900-dbd7-11e8-86d9-ba9ea3273d9e.png" width=900>
+</p>
+
+<p align='center'>
+   <img src="https://user-images.githubusercontent.com/37034031/47659033-655f5c00-dbd7-11e8-94e2-363b9b980eff.png" width=900>
+</p>
+
+### 4. IMAGENET64
 
 ## Documentation
 ### Download Dataset
@@ -56,9 +64,23 @@ Results from 2-dimensional of the 8 Gaussian Mixture Models, 25 Gaussian Mixture
 ### Training WGAN-GP
 
 ### WGAN-GP During Training
+**Note:** From the following figures, the Y axises are tge negative critic loss for the WGAN-GP.
 1. **MNIST**
 <p align='center'>
-<img src="https://user-images.githubusercontent.com/37034031/47340155-56107800-d6d8-11e8-8ec2-46ef2d8af096.png" width=900>
+<img src="https://user-images.githubusercontent.com/37034031/47659728-e5d28c80-dbd8-11e8-96bb-762d9555636c.png" width=900>
+</p>
+
+2. **CIFAR10**
+<p align='center'>
+<img src="https://user-images.githubusercontent.com/37034031/47659471-66dd5400-dbd8-11e8-8f9a-47d42420e816.png" width=900>
+</p>
+
+3. **IMAGENET64**
+
+### Inception Score on CIFAR10 During Training  
+**Note:** Inception score was calculated every 1000 iterations.
+<p align='center'>
+<img src="https://user-images.githubusercontent.com/37034031/47659769-ff73d400-dbd8-11e8-8976-9563d2d50c2d.jpg" width=600>
 </p>
 
 ### Test WGAN-GP
