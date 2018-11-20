@@ -68,19 +68,19 @@ class Solver(object):
                 os.makedirs(self.test_out_dir)
 
     def _init_logger(self):
-        if self.flags.is_train:
-            formatter = logging.Formatter('%(asctime)s:%(name)s:%(message)s')
-            # file handler
-            file_handler = logging.FileHandler(os.path.join(self.log_out_dir, 'solver.log'))
-            file_handler.setFormatter(formatter)
-            file_handler.setLevel(logging.INFO)
-            # stream handler
-            stream_handler = logging.StreamHandler()
-            stream_handler.setFormatter(formatter)
-            # add handlers
-            logger.addHandler(file_handler)
-            logger.addHandler(stream_handler)
+        formatter = logging.Formatter('%(asctime)s:%(name)s:%(message)s')
+        # file handler
+        file_handler = logging.FileHandler(os.path.join(self.log_out_dir, 'solver.log'))
+        file_handler.setFormatter(formatter)
+        file_handler.setLevel(logging.INFO)
+        # stream handler
+        stream_handler = logging.StreamHandler()
+        stream_handler.setFormatter(formatter)
+        # add handlers
+        logger.addHandler(file_handler)
+        logger.addHandler(stream_handler)
 
+        if self.flags.is_train:
             logger.info('gpu_index: {}'.format(self.flags.gpu_index))
             logger.info('batch_size: {}'.format(self.flags.batch_size))
             logger.info('dataset: {}'.format(self.flags.dataset))
@@ -153,7 +153,7 @@ class Solver(object):
             all_samples = np.concatenate(all_samples, axis=0)
             all_samples = ((all_samples + 1.) * 255. / 2.).astype(np.uint8)
 
-            mean_IS, std_IS = get_inception_score(list(all_samples))
+            mean_IS, std_IS = get_inception_score(list(all_samples), self.flags)
             # print('Inception score iter: {}, IS: {}'.format(self.iter_time, mean_IS))
 
             plot.plot('inception score', mean_IS)

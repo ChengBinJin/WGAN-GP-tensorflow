@@ -25,7 +25,9 @@ softmax = None
 
 
 # Call this function with list of images. Each of elements should be a numpy array with values ranging from 0 to 255.
-def get_inception_score(images, splits=10):
+def get_inception_score(images, flags, splits=10):
+    os.environ['CUDA_VISIBLE_DEVICES'] = flags.gpu_index
+
     assert(type(images) == list)
     assert(type(images[0]) == np.ndarray)
     assert(len(images[0].shape) == 3)
