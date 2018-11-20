@@ -1,5 +1,5 @@
 # WGAN-GP-tensorflow
-This repository is a Tensorflow implementation of [WGAN-GP](https://arxiv.org/abs/1704.00028).
+This repository is a Tensorflow implementation of the [WGAN-GP](https://arxiv.org/abs/1704.00028) for MNIST, CIFAR-10, and ImageNet64.
 
 <p align='center'>
   <img src="https://user-images.githubusercontent.com/37034031/46613989-a53ea080-cb4f-11e8-83c1-a8b99dc7bc5b.png" width=800)
@@ -8,7 +8,17 @@ This repository is a Tensorflow implementation of [WGAN-GP](https://arxiv.org/ab
 * *All samples in README.md are genearted by neural network except the first image for each row.*
 
 ## Requirements
-
+- tensorflow 1.10.0
+- python 3.5.5
+- numpy 1.14.2
+- matplotlib 2.2.2
+- scipy 0.19.1
+- pillow 5.0.0
+- urlib3 1.23
+- jsonschema 2.6.0
+- requests 2.14.2
+- tqdm 4.26.0
+- six 1.11.0
 
 ## Generated Images
 ### 1. Toy Dataset
@@ -53,15 +63,69 @@ Results from 2-dimensional of the 8 Gaussian Mixture Models, 25 Gaussian Mixture
 </p>
 
 ### 4. IMAGENET64
+### 3. CIFAR-10
+<p align='center'>
+   <img src="https://user-images.githubusercontent.com/37034031/48756003-cd86f680-ecda-11e8-949f-ee1a8cee8426.png" width=900>
+</p>
+
+<p align='center'>
+   <img src="https://user-images.githubusercontent.com/37034031/48756029-e4c5e400-ecda-11e8-97c5-49e806ffada6.png" width=900>
+</p>
 
 ## Documentation
 ### Download Dataset
+'MNIST' and 'CIFAR10' dataset will be downloaded automatically from the code if in a specific folder there are no dataset. 'ImageNet64' dataset can be download from the [Downsampled ImageNet](http://image-net.org/small/download.php).
 
 ### Directory Hierarchy
-
-### Implementation Details
+``` 
+.
+│   WGAN-GP
+│   ├── src
+│   │   ├── imagenet (folder saved inception network weights that downloaded from the inception_score.py)
+│   │   ├── cache.py
+│   │   ├── cifar10.py
+│   │   ├── dataset.py
+│   │   ├── dataset_.py
+│   │   ├── download.py
+│   │   ├── inception_score.py
+│   │   ├── main.py
+│   │   ├── plot.py
+│   │   ├── solver.py
+│   │   ├── tensorflow_utils.py
+│   │   ├── utils.py
+│   │   └── wgan_gp.py
+│   Data
+│   ├── mnist
+│   ├── cifar10
+│   └── imagenet64
+```  
+**src**: source codes of the WGAN-GP
 
 ### Training WGAN-GP
+Use `main.py` to train a VAE network. Example usage:
+
+```
+python main.py
+```
+ - `gpu_index`: gpu index, default: `0`  
+ - `batch_size`: batch size for one feed forward, default: `64`  
+ - `dataset`: dataset name from [mnist, cifar10, imagenet64], default: `mnist`  
+ 
+ - `is_train`: training or inference mode, default: `True`  
+ - `learning_rate`: initial learning rate for Adam, default: `0.001`  
+ - `num_critic`: the number of iterations of the critic per generator iteration, default: `5`
+ - `z_dim`: dimension of z vector, default: `128`
+ - `lambda_`: gradient penalty lambda hyperparameter, default: `10.`
+ - `beta1`: beta1 momentum term of Adam, default: `0.5`
+ - `beta2`: beta2 momentum term of Adam, default: `0.9`
+
+ - `iters`: number of interations, default: `200000`
+ - `print_freq`: print frequency for loss, default: `100`
+ - `save_freq`: save frequency for model, default: `10000`
+ - `sample_freq`: sample frequency for saving image, default: `500`
+ - `inception_freq`: calculation frequence of the inception score, default: `1000`
+ - `sample_batch`: number of sampling images for check generator quality, default: `64`
+ - `load_model`: folder of save model that you wish to test, (e.g. 20181120-1558). default: `None` 
 
 ### WGAN-GP During Training
 **Note:** From the following figures, the Y axises are tge negative critic loss for the WGAN-GP.
@@ -76,6 +140,9 @@ Results from 2-dimensional of the 8 Gaussian Mixture Models, 25 Gaussian Mixture
 </p>
 
 3. **IMAGENET64**
+<p align='center'>
+<img src="https://user-images.githubusercontent.com/37034031/48756901-518ead80-ecde-11e8-89dc-7e586db34b9a.png" width=900>
+</p>
 
 ### Inception Score on CIFAR10 During Training  
 **Note:** Inception score was calculated every 1000 iterations.
@@ -84,6 +151,12 @@ Results from 2-dimensional of the 8 Gaussian Mixture Models, 25 Gaussian Mixture
 </p>
 
 ### Test WGAN-GP
+Use `main.py` to test a WGAN-GP network. Example usage:
+
+```
+python main.py --is_train=false --load_model=folder/you/wish/to/test/e.g./20181120-1558
+```
+Please refer to the above arguments.
 
 ### Citation
 ```
@@ -109,3 +182,4 @@ Copyright (c) 2018 Cheng-Bin Jin. Contact me for commercial use (or rather any u
 - [WGAN](https://github.com/ChengBinJin/WGAN-TensorFlow)
 - [pix2pix](https://github.com/ChengBinJin/pix2pix-tensorflow)
 - [DiscoGAN](https://github.com/ChengBinJin/DiscoGAN-TensorFlow)
+- [VAE](https://github.com/ChengBinJin/VAE-Tensorflow)
