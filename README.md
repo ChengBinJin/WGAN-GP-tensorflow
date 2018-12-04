@@ -102,7 +102,7 @@ Results from 2-dimensional of the 8 Gaussian Mixture Models, 25 Gaussian Mixture
 **src**: source codes of the WGAN-GP
 
 ### Training WGAN-GP
-Use `main.py` to train a VAE network. Example usage:
+Use `main.py` to train a WGAN-GP network. Example usage:
 
 ```
 python main.py
