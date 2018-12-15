@@ -63,7 +63,6 @@ Results from 2-dimensional of the 8 Gaussian Mixture Models, 25 Gaussian Mixture
 </p>
 
 ### 4. IMAGENET64
-### 3. CIFAR-10
 <p align='center'>
    <img src="https://user-images.githubusercontent.com/37034031/48756003-cd86f680-ecda-11e8-949f-ee1a8cee8426.png" width=900>
 </p>
