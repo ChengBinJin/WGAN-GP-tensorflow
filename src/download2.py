@@ -7,7 +7,6 @@ Downloads the following:
 - MNIST dataset
 """
 
-from __future__ import print_function
 import os
 import sys
 import json
