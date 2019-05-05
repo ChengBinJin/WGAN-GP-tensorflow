@@ -7,18 +7,56 @@ This repository is a Tensorflow implementation of the [WGAN-GP](https://arxiv.or
   
 * *All samples in README.md are genearted by neural network except the first image for each row.*
 
-## Requirements
-- tensorflow 1.10.0
-- python 3.5.5
-- numpy 1.14.2
-- matplotlib 2.2.2
-- scipy 0.19.1
-- pillow 5.0.0
-- urlib3 1.23
-- jsonschema 2.6.0
-- requests 2.14.2
-- tqdm 4.26.0
-- six 1.11.0
+## Install Prerequisites
+
+*   python 3.5, 3.6 or 3.7
+*   python3-tk
+
+Ubuntu/Debian/etc.:
+
+    sudo apt install python3.5 python3.5-tk
+
+## Create Virtual Environment
+
+    python -m venv venv
+
+## Activate Virtual Environment
+
+Windows:
+
+    venv/Scripts/activate
+
+Bash:
+
+    source venv/bin/activate
+
+## Install Virtual Environment Requirements
+
+    pip install -r requirements.d/venv.txt
+
+## Create Execution Environments
+
+    tox --notest
+
+That will install tensorflow which uses only the CPU.
+
+To use an Nvidia GPU:
+
+    .tox/py35/bin/python -m pip uninstall tensorflow
+    .tox/py35/bin/python -m pip install tensorflow-gpu==1.13.1
+    .tox/py36/bin/python -m pip uninstall tensorflow
+    .tox/py36/bin/python -m pip install tensorflow-gpu==1.13.1
+    .tox/py37/bin/python -m pip uninstall tensorflow
+    .tox/py37/bin/python -m pip install tensorflow-gpu==1.13.1
+
+To use an AMD GPU:
+
+    .tox/py35/bin/python -m pip uninstall tensorflow
+    .tox/py35/bin/python -m pip install tensorflow-rocm==1.13.1
+    .tox/py36/bin/python -m pip uninstall tensorflow
+    .tox/py36/bin/python -m pip install tensorflow-rocm==1.13.1
+    .tox/py36/bin/python -m pip uninstall tensorflow
+    .tox/py37/bin/python -m pip install tensorflow-rocm==1.13.1
 
 ## Generated Images
 ### 1. Toy Dataset
