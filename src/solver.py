@@ -111,7 +111,7 @@ class Solver(object):
 
         # for iter_time in range(self.flags.iters):
         while self.iter_time < self.flags.iters:
-            # samppling images and save them
+            # sampling images and save them
             self.sample(self.iter_time)
 
             # train_step
