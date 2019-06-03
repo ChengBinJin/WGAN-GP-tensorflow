@@ -111,7 +111,7 @@ class Solver(object):
 
         # for iter_time in range(self.flags.iters):
         while self.iter_time < self.flags.iters:
-            # samppling images and save them
+            # sampling images and save them
             self.sample(self.iter_time)
 
             # train_step
@@ -174,12 +174,12 @@ class Solver(object):
     def load_model(self):
         logger.info(' [*] Reading checkpoint...')
 
-        ckpt = tf.train.get_checkpoint_state(self.model_out_dir)
-        if ckpt and ckpt.model_checkpoint_path:
-            ckpt_name = os.path.basename(ckpt.model_checkpoint_path)
+        checkpoint = tf.train.get_checkpoint_state(self.model_out_dir)
+        if checkpoint and checkpoint.model_checkpoint_path:
+            ckpt_name = os.path.basename(checkpoint.model_checkpoint_path)
             self.saver.restore(self.sess, os.path.join(self.model_out_dir, ckpt_name))
 
-            meta_graph_path = ckpt.model_checkpoint_path + '.meta'
+            meta_graph_path = checkpoint.model_checkpoint_path + '.meta'
             self.iter_time = int(meta_graph_path.split('-')[-1].split('.')[0])
 
             logger.info('[*] Load iter_time: {}'.format(self.iter_time))
