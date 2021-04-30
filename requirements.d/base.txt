@@ -31,5 +31,5 @@ tensorflow==1.15.0
 tensorflow-estimator==1.13.0
 termcolor==1.1.0
 tqdm==4.31.1
-urllib3==1.25.2
+urllib3==1.25.8
 Werkzeug==0.15.3
